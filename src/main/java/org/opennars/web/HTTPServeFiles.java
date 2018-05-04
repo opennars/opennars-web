@@ -12,21 +12,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package nars.web;
+package org.opennars.web;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
-import static nars.web.HTTPServer.HTTP_FORBIDDEN;
-import static nars.web.HTTPServer.HTTP_INTERNALERROR;
-import static nars.web.HTTPServer.HTTP_NOTFOUND;
-import static nars.web.HTTPServer.HTTP_OK;
-import static nars.web.HTTPServer.HTTP_REDIRECT;
-import static nars.web.HTTPServer.MIME_DEFAULT_BINARY;
-import static nars.web.HTTPServer.MIME_HTML;
-import static nars.web.HTTPServer.MIME_PLAINTEXT;
 
 /**
  *

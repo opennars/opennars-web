@@ -18,11 +18,11 @@
  * and open the template in the editor.
  */
 
-package nars.web;
+package org.opennars.web;
 
-import nars.main.NAR;
-import nars.io.events.TextOutputHandler;
-import nars.io.events.TextOutputHandler.LineOutput;
+import org.opennars.main.NAR;
+import org.opennars.io.events.TextOutputHandler;
+import org.opennars.io.events.TextOutputHandler.LineOutput;
 
 /**
  * An instance of a web socket session to a NAR

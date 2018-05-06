@@ -35,7 +35,7 @@ public class NARServer  {
     
     class NARSWebSocketServer extends WebSocketServer  {
 
-        public NARSWebSocketServer(InetSocketAddress addr) throws UnknownHostException {
+        public NARSWebSocketServer(InetSocketAddress addr) {
             super(addr);
         }
 
@@ -94,7 +94,7 @@ public class NARServer  {
     final NARSWebSocketServer websockets;
     private final Map<WebSocket, NARConnection> socketSession = new HashMap();
 
-    public NARServer(int httpPort, int webSocketsPort) throws UnknownHostException, IOException {
+    public NARServer(int httpPort, int webSocketsPort) throws IOException {
         websockets = new NARSWebSocketServer(new InetSocketAddress(webSocketsPort));
         websockets.start();
         

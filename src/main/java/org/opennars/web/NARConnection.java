@@ -20,22 +20,22 @@
 
 package org.opennars.web;
 
-import org.opennars.main.NAR;
+import org.opennars.main.Nar;
 import org.opennars.io.events.TextOutputHandler;
 import org.opennars.io.events.TextOutputHandler.LineOutput;
 
 /**
- * An instance of a web socket session to a NAR
+ * An instance of a web socket session to a Nar
  * @author me
  */
 abstract public class NARConnection implements LineOutput {
-    public final NAR nar;
+    public final Nar nar;
     protected final TextOutputHandler writer;
     int cycleIntervalMS;
     //private final TextReaction extraParser;
         
     
-    public NARConnection(NAR nar, int cycleIntervalMS) {
+    public NARConnection(Nar nar, int cycleIntervalMS) {
         this.nar = nar;
         this.cycleIntervalMS = cycleIntervalMS;
              

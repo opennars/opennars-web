@@ -12,19 +12,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.opennars.web;
+package org.opennars.web.httpnar;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-import org.opennars.main.NAR;
 import org.java_websocket.WebSocket;
 import org.java_websocket.WebSocketImpl;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import org.opennars.interfaces.pub.Reasoner;
+import org.opennars.main.Nar;
 
 public class NARServer  {
 
@@ -43,6 +43,8 @@ public class NARServer  {
         public void onStart() {
         }
 
+        public Reasoner nar;
+        
         @Override
         public void onOpen(final WebSocket conn, ClientHandshake handshake) {
             //this.sendToAll("new connection: " + handshake.getResourceDescriptor());
@@ -51,7 +53,10 @@ public class NARServer  {
 
             if (WEBSOCKET_DEBUG) System.out.println("Connect: " + conn.getRemoteSocketAddress().getAddress().getHostAddress());
 
-            final NARConnection n = new NARConnection(new NAR(), cycleIntervalMS) {
+            if(nar == null) {
+                nar = new Nar();
+            }
+            final NARConnection n = new NARConnection(nar, cycleIntervalMS) {
                 @Override public void println(String output) {
                     conn.send(output);
                 }

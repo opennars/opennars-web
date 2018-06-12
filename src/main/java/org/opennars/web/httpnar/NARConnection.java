@@ -18,9 +18,10 @@
  * and open the template in the editor.
  */
 
-package org.opennars.web;
+package org.opennars.web.httpnar;
 
-import org.opennars.main.NAR;
+import org.opennars.interfaces.pub.Reasoner;
+import org.opennars.main.Nar;
 import org.opennars.io.events.TextOutputHandler;
 import org.opennars.io.events.TextOutputHandler.LineOutput;
 
@@ -29,17 +30,17 @@ import org.opennars.io.events.TextOutputHandler.LineOutput;
  * @author me
  */
 abstract public class NARConnection implements LineOutput {
-    public final NAR nar;
+    public final Reasoner nar;
     protected final TextOutputHandler writer;
     int cycleIntervalMS;
     //private final TextReaction extraParser;
         
     
-    public NARConnection(NAR nar, int cycleIntervalMS) {
+    public NARConnection(Reasoner nar, int cycleIntervalMS) {
         this.nar = nar;
         this.cycleIntervalMS = cycleIntervalMS;
              
-        this.writer = new TextOutputHandler(nar, this);
+        this.writer = new TextOutputHandler((Nar) nar, this);
     }
 
     public void read(final String message) {

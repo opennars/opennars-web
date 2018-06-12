@@ -23,6 +23,7 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.WebSocketImpl;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import org.opennars.interfaces.pub.Reasoner;
 import org.opennars.main.Nar;
 
 public class NARServer  {
@@ -42,7 +43,7 @@ public class NARServer  {
         public void onStart() {
         }
 
-        public Nar nar;
+        public Reasoner nar;
         
         @Override
         public void onOpen(final WebSocket conn, ClientHandshake handshake) {

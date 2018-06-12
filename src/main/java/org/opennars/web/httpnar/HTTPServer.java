@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.opennars.web;
+package org.opennars.web.httpnar;
 
 /*
  "Copyright (C) 2001,2005 by Jarno Elonen <elonen@iki.fi>\n"+

@@ -20,21 +20,25 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
 import org.opennars.entity.Task;
 import org.opennars.io.events.EventEmitter.EventObserver;
 import org.opennars.io.events.Events;
 import org.opennars.language.CompoundTerm;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
+import org.xml.sax.SAXException;
 
 public class NarNode extends Nar implements EventObserver  {
     
@@ -51,7 +55,9 @@ public class NarNode extends Nar implements EventObserver  {
      * @throws SocketException
      * @throws UnknownHostException 
      */
-    public NarNode(int listenPort) throws SocketException, UnknownHostException {
+    public NarNode(int listenPort) throws SocketException, UnknownHostException, IOException, InstantiationException, 
+            InvocationTargetException, NoSuchMethodException, ParserConfigurationException, IllegalAccessException, SAXException, 
+            ClassNotFoundException, ParseException {
         super();
         this.receiveSocket = new DatagramSocket(listenPort, InetAddress.getByName("127.0.0.1"));
         this.event(this, true, Events.TaskAdd.class);
@@ -190,7 +196,9 @@ public class NarNode extends Nar implements EventObserver  {
      * @throws IOException
      * @throws InterruptedException 
      */
-    public static void main(String[] args) throws SocketException, UnknownHostException, IOException, InterruptedException {
+    public static void main(String[] args) throws SocketException, UnknownHostException, IOException, 
+            InterruptedException, InstantiationException, InvocationTargetException, ParserConfigurationException, 
+            NoSuchMethodException, SAXException, ClassNotFoundException, IllegalAccessException, ParseException {
         int nar1port = 64001;
         int nar2port = 64002;
         String localIP = "127.0.0.1";

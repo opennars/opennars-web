@@ -115,7 +115,7 @@ public class NarNode extends Nar implements EventObserver  {
                 if(!searchTerm || atomicEqualsSearched || compoundContainsSearched) {
                     DatagramPacket packet = new DatagramPacket(serializedMessage, serializedMessage.length, target.targetAddress, target.targetPort);
                     target.sendSocket.send(packet);
-                    System.out.println("task sent:" + t);
+                    //System.out.println("task sent:" + t);
                 }
             }
         }
@@ -175,7 +175,7 @@ public class NarNode extends Nar implements EventObserver  {
         receiveSocket.receive(packet);
         ObjectInputStream iStream = new ObjectInputStream(new ByteArrayInputStream(recBytes));
         Task T = (Task) iStream.readObject();
-        System.out.println("task received: " + T);
+        //System.out.println("task received: " + T);
         iStream.close();
         return T;
     }
@@ -203,11 +203,12 @@ public class NarNode extends Nar implements EventObserver  {
             public void event(Class event, Object[] args) {
                 if(event == EventReceivedTask.class) {
                     Task task = (Task) args[0];
-                    System.out.println("received task event triggered for task: " + task);
+                    System.out.println("received task event triggered in nar2: " + task);
                     System.out.println("success");
                 }
             }
         }, true, EventReceivedTask.class);
+        System.out.println("High priority task occurred in nar1");
         nar1.addInput("<{task1} --> [great]>.");
         Thread.sleep(5000);
         System.exit(0);

@@ -126,7 +126,7 @@ public class NarNode extends Nar implements EventObserver  {
                 if(!searchTerm || atomicEqualsSearched || compoundContainsSearched) {
                     DatagramPacket packet = new DatagramPacket(serializedMessage, serializedMessage.length, target.targetAddress, target.targetPort);
                     target.sendSocket.send(packet);
-                    System.out.println("task sent:" + t);
+                    //System.out.println("task sent:" + t);
                 }
             }
         }
@@ -186,7 +186,7 @@ public class NarNode extends Nar implements EventObserver  {
         receiveSocket.receive(packet);
         ObjectInputStream iStream = new ObjectInputStream(new ByteArrayInputStream(recBytes));
         Task T = (Task) iStream.readObject();
-        System.out.println("task received: " + T);
+        //System.out.println("task received: " + T);
         iStream.close();
         return T;
     }

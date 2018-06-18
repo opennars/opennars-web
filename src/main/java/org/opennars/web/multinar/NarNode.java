@@ -216,11 +216,12 @@ public class NarNode extends Nar implements EventObserver  {
             public void event(Class event, Object[] args) {
                 if(event == EventReceivedTask.class) {
                     Task task = (Task) args[0];
-                    System.out.println("received task event triggered for task: " + task);
+                    System.out.println("received task event triggered in nar2: " + task);
                     System.out.println("success");
                 }
             }
         }, true, EventReceivedTask.class);
+        System.out.println("High priority task occurred in nar1");
         nar1.addInput("<{task1} --> [great]>.");
         Thread.sleep(5000);
         System.exit(0);

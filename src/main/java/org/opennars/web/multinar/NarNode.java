@@ -20,21 +20,25 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
 import org.opennars.entity.Task;
 import org.opennars.io.events.EventEmitter.EventObserver;
 import org.opennars.io.events.Events;
 import org.opennars.language.CompoundTerm;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
+import org.xml.sax.SAXException;
 
 public class NarNode extends Nar implements EventObserver  {
     
@@ -44,6 +48,11 @@ public class NarNode extends Nar implements EventObserver  {
     /* The socket the Nar listens from */
     private DatagramSocket receiveSocket;
     
+    @Override
+    public long time() {
+        return System.currentTimeMillis();
+    }
+    
     /***
      * Create a Nar node that listens for received tasks from other NarNode instances
      * 
@@ -51,7 +60,9 @@ public class NarNode extends Nar implements EventObserver  {
      * @throws SocketException
      * @throws UnknownHostException 
      */
-    public NarNode(int listenPort) throws SocketException, UnknownHostException {
+    public NarNode(int listenPort) throws SocketException, UnknownHostException, IOException, InstantiationException, 
+            InvocationTargetException, NoSuchMethodException, ParserConfigurationException, IllegalAccessException, SAXException, 
+            ClassNotFoundException, ParseException {
         super();
         this.receiveSocket = new DatagramSocket(listenPort, InetAddress.getByName("127.0.0.1"));
         this.event(this, true, Events.TaskAdd.class);
@@ -115,7 +126,7 @@ public class NarNode extends Nar implements EventObserver  {
                 if(!searchTerm || atomicEqualsSearched || compoundContainsSearched) {
                     DatagramPacket packet = new DatagramPacket(serializedMessage, serializedMessage.length, target.targetAddress, target.targetPort);
                     target.sendSocket.send(packet);
-                    System.out.println("task sent:" + t);
+                    //System.out.println("task sent:" + t);
                 }
             }
         }
@@ -175,7 +186,7 @@ public class NarNode extends Nar implements EventObserver  {
         receiveSocket.receive(packet);
         ObjectInputStream iStream = new ObjectInputStream(new ByteArrayInputStream(recBytes));
         Task T = (Task) iStream.readObject();
-        System.out.println("task received: " + T);
+        //System.out.println("task received: " + T);
         iStream.close();
         return T;
     }
@@ -190,7 +201,9 @@ public class NarNode extends Nar implements EventObserver  {
      * @throws IOException
      * @throws InterruptedException 
      */
-    public static void main(String[] args) throws SocketException, UnknownHostException, IOException, InterruptedException {
+    public static void main(String[] args) throws SocketException, UnknownHostException, IOException, 
+            InterruptedException, InstantiationException, InvocationTargetException, ParserConfigurationException, 
+            NoSuchMethodException, SAXException, ClassNotFoundException, IllegalAccessException, ParseException {
         int nar1port = 64001;
         int nar2port = 64002;
         String localIP = "127.0.0.1";
@@ -203,11 +216,12 @@ public class NarNode extends Nar implements EventObserver  {
             public void event(Class event, Object[] args) {
                 if(event == EventReceivedTask.class) {
                     Task task = (Task) args[0];
-                    System.out.println("received task event triggered for task: " + task);
+                    System.out.println("received task event triggered in nar2: " + task);
                     System.out.println("success");
                 }
             }
         }, true, EventReceivedTask.class);
+        System.out.println("High priority task occurred in nar1");
         nar1.addInput("<{task1} --> [great]>.");
         Thread.sleep(5000);
         System.exit(0);

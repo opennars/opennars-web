@@ -48,6 +48,11 @@ public class NarNode extends Nar implements EventObserver  {
     /* The socket the Nar listens from */
     private DatagramSocket receiveSocket;
     
+    @Override
+    public long time() {
+        return System.currentTimeMillis();
+    }
+    
     /***
      * Create a Nar node that listens for received tasks from other NarNode instances
      * 

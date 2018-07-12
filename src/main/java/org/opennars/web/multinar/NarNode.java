@@ -74,7 +74,7 @@ public class NarNode extends Nar implements EventObserver  {
                         Task ret = THIS.receiveTask();
                         if(ret != null) {
                             THIS.memory.event.emit(EventReceivedTask.class, new Object[]{ret});
-                            THIS.addInput(ret);
+                            THIS.addInput(ret, THIS);
                         }
                     } catch (IOException ex) {
                         Logger.getLogger(NarNode.class.getName()).log(Level.SEVERE, null, ex);

@@ -193,7 +193,7 @@ public class NarNode extends Nar implements EventObserver  {
     
     
     /**
-     * An example
+     * An example with one NarNode sending a task to another NarNode
      * 
      * @param args
      * @throws SocketException

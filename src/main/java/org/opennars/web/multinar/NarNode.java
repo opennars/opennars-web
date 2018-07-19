@@ -80,7 +80,7 @@ public class NarNode extends Nar implements EventObserver  {
                             } else
                             if(ret instanceof String) {
                                 THIS.memory.event.emit(EventReceivedNarsese.class, new Object[]{ret});
-                                THIS.addInput(ret);
+                                THIS.addInput((String) ret);
                             }
                         }
                     } catch (IOException ex) {

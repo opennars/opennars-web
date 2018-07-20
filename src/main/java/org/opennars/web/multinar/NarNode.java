@@ -44,6 +44,7 @@ public class NarNode extends Nar implements EventObserver  {
     
     /* An extra event for received tasks*/
     public class EventReceivedTask {}
+    public class EventReceivedNarsese {}
     
     /* The socket the Nar listens from */
     private DatagramSocket receiveSocket;
@@ -71,10 +72,16 @@ public class NarNode extends Nar implements EventObserver  {
             public void run() {
                 for(;;) {
                     try {
-                        Task ret = THIS.receiveTask();
+                        Object ret = THIS.receiveObject();
                         if(ret != null) {
-                            THIS.memory.event.emit(EventReceivedTask.class, new Object[]{ret});
-                            THIS.addInput(ret);
+                            if(ret instanceof Task) {
+                                THIS.memory.event.emit(EventReceivedTask.class, new Object[]{ret});
+                                THIS.addInput((Task) ret, THIS);
+                            } else
+                            if(ret instanceof String) {
+                                THIS.memory.event.emit(EventReceivedNarsese.class, new Object[]{ret});
+                                THIS.addInput((String) ret);
+                            }
                         }
                     } catch (IOException ex) {
                         Logger.getLogger(NarNode.class.getName()).log(Level.SEVERE, null, ex);
@@ -131,6 +138,27 @@ public class NarNode extends Nar implements EventObserver  {
             }
         }
     }
+    
+    /**
+     * Send Narsese that contains the optional mustContainTerm
+     * 
+     * @param t
+     * @throws IOException 
+     */
+    private void sendNarsese(String input, TargetNar target) throws IOException {
+        ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+        ObjectOutput oo = new ObjectOutputStream(bStream); 
+        oo.writeObject(input);
+        oo.close();
+        byte[] serializedMessage = bStream.toByteArray();
+        boolean searchTerm = target.mustContainTerm != null;
+        boolean containsFound = searchTerm && input.contains(target.mustContainTerm.toString());
+        if(!searchTerm || containsFound) {
+            DatagramPacket packet = new DatagramPacket(serializedMessage, serializedMessage.length, target.targetAddress, target.targetPort);
+            target.sendSocket.send(packet);
+            //System.out.println("narsese sent:" + input);
+        }
+    }
 
     public class TargetNar {
         
@@ -180,20 +208,19 @@ public class NarNode extends Nar implements EventObserver  {
      * @throws IOException
      * @throws ClassNotFoundException 
      */
-    private Task receiveTask() throws IOException, ClassNotFoundException {
+    private Object receiveObject() throws IOException, ClassNotFoundException {
         byte[] recBytes = new byte[100000];
         DatagramPacket packet = new DatagramPacket(recBytes, recBytes.length);
         receiveSocket.receive(packet);
         ObjectInputStream iStream = new ObjectInputStream(new ByteArrayInputStream(recBytes));
-        Task T = (Task) iStream.readObject();
-        //System.out.println("task received: " + T);
+        Object msg = iStream.readObject();
         iStream.close();
-        return T;
+        return msg;
     }
     
     
     /**
-     * An example
+     * An example with one NarNode sending a task to another NarNode
      * 
      * @param args
      * @throws SocketException

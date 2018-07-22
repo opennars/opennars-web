@@ -44,7 +44,6 @@ public class NarNode extends Nar implements EventObserver  {
     
     /* An extra event for received tasks*/
     public class EventReceivedTask {}
-    public class EventReceivedNarsese {}
     
     /* The socket the Nar listens from */
     private DatagramSocket receiveSocket;
@@ -78,8 +77,7 @@ public class NarNode extends Nar implements EventObserver  {
                                 THIS.memory.event.emit(EventReceivedTask.class, new Object[]{ret});
                                 THIS.addInput((Task) ret, THIS);
                             } else
-                            if(ret instanceof String) {
-                                THIS.memory.event.emit(EventReceivedNarsese.class, new Object[]{ret});
+                            if(ret instanceof String) { //emits IN.class anyway
                                 THIS.addInput((String) ret);
                             }
                         }
@@ -145,7 +143,7 @@ public class NarNode extends Nar implements EventObserver  {
      * @param t
      * @throws IOException 
      */
-    private void sendNarsese(String input, TargetNar target) throws IOException {
+    public static void sendNarsese(String input, TargetNar target) throws IOException {
         ByteArrayOutputStream bStream = new ByteArrayOutputStream();
         ObjectOutput oo = new ObjectOutputStream(bStream); 
         oo.writeObject(input);
@@ -158,6 +156,9 @@ public class NarNode extends Nar implements EventObserver  {
             target.sendSocket.send(packet);
             //System.out.println("narsese sent:" + input);
         }
+    }
+    public static void sendNarsese(String input, final String targetIP, final int targetPort, final float taskThreshold, Term mustContainTerm) throws IOException {
+        sendNarsese(input, new TargetNar(targetIP, targetPort, taskThreshold, mustContainTerm));
     }
 
     public static class TargetNar {

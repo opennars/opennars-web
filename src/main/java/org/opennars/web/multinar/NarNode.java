@@ -160,7 +160,7 @@ public class NarNode extends Nar implements EventObserver  {
         }
     }
 
-    public class TargetNar {
+    public static class TargetNar {
         
         /**
          * The target Nar node, specifying under which conditions the current Nar node redirects tasks to it.
@@ -198,7 +198,10 @@ public class NarNode extends Nar implements EventObserver  {
      * @throws UnknownHostException 
      */
     public void addRedirectionTo(final String targetIP, final int targetPort, final float taskThreshold, Term mustContainTerm) throws SocketException, UnknownHostException {
-        targets.add(new TargetNar(targetIP, targetPort, taskThreshold, mustContainTerm));
+        addRedirectionTo(new TargetNar(targetIP, targetPort, taskThreshold, mustContainTerm));
+    }
+    public void addRedirectionTo(TargetNar target) throws SocketException, UnknownHostException {
+        targets.add(target);
     }
  
     /***
@@ -231,27 +234,20 @@ public class NarNode extends Nar implements EventObserver  {
     public static void main(String[] args) throws SocketException, UnknownHostException, IOException, 
             InterruptedException, InstantiationException, InvocationTargetException, ParserConfigurationException, 
             NoSuchMethodException, SAXException, ClassNotFoundException, IllegalAccessException, ParseException {
-        int nar1port = 64001;
-        int nar2port = 64002;
-        String localIP = "127.0.0.1";
+        if((args.length-2) % 4 != 0) { //args length check, it has to be 2+4*k, with k in N0
+            System.out.println("expected arguments: minCyclePeriodMS listenPort targetIP1 targetPort1 prioThres1 mustContainTerm1 ... targetIPN targetPortN prioThresN mustContainTermN");
+            System.exit(0);
+        }
+        int nar1port = Integer.parseInt(args[1]);
         NarNode nar1 = new NarNode(nar1port);
-        NarNode nar2 = new NarNode(nar2port);
-        nar1.addRedirectionTo(localIP, nar2port, 0.5f, null);
-        //nar2.connectTo(localIP, nar1port, 0.5f);
-        nar2.event(new EventObserver() {
-            @Override
-            public void event(Class event, Object[] args) {
-                if(event == EventReceivedTask.class) {
-                    Task task = (Task) args[0];
-                    System.out.println("received task event triggered in nar2: " + task);
-                    System.out.println("success");
-                }
-            }
-        }, true, EventReceivedTask.class);
-        System.out.println("High priority task occurred in nar1");
-        nar1.addInput("<{task1} --> [great]>.");
-        Thread.sleep(5000);
-        System.exit(0);
+        List<TargetNar> redirections = new ArrayList<TargetNar>();
+        for(int i=2; i<args.length; i+=4) {
+            Term T = args[i+3].equals("null") ? null : new Term(args[i+3]);
+            redirections.add(new TargetNar(args[i], Integer.parseInt(args[i+1]), Float.parseFloat(args[i+2]), T));
+        }
+        for(TargetNar target : redirections) {
+            nar1.addRedirectionTo(target);
+        }
+        nar1.start(Integer.parseInt(args[0]));
     }
-    
 }

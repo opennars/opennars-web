@@ -37,9 +37,9 @@ public class NarNodeTest {
         String localIP = "127.0.0.1";
         NarNode nar1 = new NarNode(nar1port);
         NarNode nar2 = new NarNode(nar2port);
-        TargetNar nar2_connection = new TargetNar(localIP, nar2port, 0.5f, null);
+        TargetNar nar2_connection = new TargetNar(localIP, nar2port, 0.5f, null, true);
         nar1.addRedirectionTo(nar2_connection);
-        nar2.event(new EventEmitter.EventObserver() {
+        nar2.nar.event(new EventEmitter.EventObserver() {
             @Override
             public void event(Class event, Object[] args) {
                 if(event == NarNode.EventReceivedTask.class || event == IN.class) {
@@ -53,7 +53,7 @@ public class NarNodeTest {
         }, true, NarNode.EventReceivedTask.class, IN.class);
         System.out.println("High priority task occurred in nar1");
         NarNode.sendNarsese("<{task1} --> [great]>.", nar2_connection);
-        nar1.addInput("<{task1} --> [great]>.");
+        nar1.nar.addInput("<{task1} --> [great]>.");
         while(true) {
             synchronized(a) {
                 if(a == 2) {

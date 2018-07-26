@@ -38,20 +38,21 @@ import org.opennars.io.events.Events;
 import org.opennars.language.CompoundTerm;
 import org.opennars.language.Term;
 import org.opennars.main.Nar;
+import org.opennars.main.Shell;
 import org.xml.sax.SAXException;
 
-public class NarNode extends Nar implements EventObserver  {
+public class NarNode implements EventObserver  {
     
     /* An extra event for received tasks*/
     public class EventReceivedTask {}
     
     /* The socket the Nar listens from */
-    private DatagramSocket receiveSocket;
+    private transient DatagramSocket receiveSocket;
     
-    @Override
-    public long time() {
-        return System.currentTimeMillis();
-    }
+    /* Listen port however is not transient and can be used to recover the deserialized instance */
+    private int listenPort;
+    
+    public Nar nar;
     
     /***
      * Create a Nar node that listens for received tasks from other NarNode instances
@@ -63,9 +64,16 @@ public class NarNode extends Nar implements EventObserver  {
     public NarNode(int listenPort) throws SocketException, UnknownHostException, IOException, InstantiationException, 
             InvocationTargetException, NoSuchMethodException, ParserConfigurationException, IllegalAccessException, SAXException, 
             ClassNotFoundException, ParseException {
+        this(new Nar(),listenPort);
+    }
+    public NarNode(Nar nar, int listenPort) throws SocketException, UnknownHostException, IOException, InstantiationException, 
+            InvocationTargetException, NoSuchMethodException, ParserConfigurationException, IllegalAccessException, SAXException, 
+            ClassNotFoundException, ParseException {
         super();
+        this.nar = nar;
+        this.listenPort = listenPort;
         this.receiveSocket = new DatagramSocket(listenPort, InetAddress.getByName("127.0.0.1"));
-        this.event(this, true, Events.TaskAdd.class);
+        nar.event(this, true, Events.TaskAdd.class);
         NarNode THIS = this;
         new Thread() {
             public void run() {
@@ -74,11 +82,11 @@ public class NarNode extends Nar implements EventObserver  {
                         Object ret = THIS.receiveObject();
                         if(ret != null) {
                             if(ret instanceof Task) {
-                                THIS.memory.event.emit(EventReceivedTask.class, new Object[]{ret});
-                                THIS.addInput((Task) ret, THIS);
+                                nar.memory.event.emit(EventReceivedTask.class, new Object[]{ret});
+                                nar.addInput((Task) ret, nar);
                             } else
                             if(ret instanceof String) { //emits IN.class anyway
-                                THIS.addInput((String) ret);
+                                nar.addInput((String) ret);
                             }
                         }
                     } catch (IOException ex) {
@@ -103,7 +111,7 @@ public class NarNode extends Nar implements EventObserver  {
             Task t = (Task) args[0];
             try {
                 sendTask(t);
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(NarNode.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -116,6 +124,7 @@ public class NarNode extends Nar implements EventObserver  {
      * @throws IOException 
      */
     private void sendTask(Task t) throws IOException {
+        String wat = t.toString();
         ByteArrayOutputStream bStream = new ByteArrayOutputStream();
         ObjectOutput oo = new ObjectOutputStream(bStream); 
         oo.writeObject(t);
@@ -158,7 +167,7 @@ public class NarNode extends Nar implements EventObserver  {
         }
     }
     public static void sendNarsese(String input, final String targetIP, final int targetPort, final float taskThreshold, Term mustContainTerm) throws IOException {
-        sendNarsese(input, new TargetNar(targetIP, targetPort, taskThreshold, mustContainTerm));
+        sendNarsese(input, new TargetNar(targetIP, targetPort, taskThreshold, mustContainTerm, true));
     }
 
     public static class TargetNar {
@@ -173,18 +182,20 @@ public class NarNode extends Nar implements EventObserver  {
          * @throws SocketException
          * @throws UnknownHostException 
          */
-        public TargetNar(final String targetIP, final int targetPort, final float threshold, Term mustContainTerm) throws SocketException, UnknownHostException {
+        public TargetNar(final String targetIP, final int targetPort, final float threshold, Term mustContainTerm, boolean sendInput) throws SocketException, UnknownHostException {
             this.targetAddress = InetAddress.getByName(targetIP);
             this.sendSocket = new DatagramSocket();
             this.threshold = threshold;
             this.targetPort = targetPort;
             this.mustContainTerm = mustContainTerm;
+            this.sendInput = sendInput;
         }
         final float threshold;
         final DatagramSocket sendSocket;
         final int targetPort;
         final InetAddress targetAddress;
         final Term mustContainTerm;
+        final boolean sendInput;
     }
     
     private List<TargetNar> targets = new ArrayList<>();
@@ -198,8 +209,8 @@ public class NarNode extends Nar implements EventObserver  {
      * @throws SocketException
      * @throws UnknownHostException 
      */
-    public void addRedirectionTo(final String targetIP, final int targetPort, final float taskThreshold, Term mustContainTerm) throws SocketException, UnknownHostException {
-        addRedirectionTo(new TargetNar(targetIP, targetPort, taskThreshold, mustContainTerm));
+    public void addRedirectionTo(final String targetIP, final int targetPort, final float taskThreshold, Term mustContainTerm, boolean sendInput) throws SocketException, UnknownHostException {
+        addRedirectionTo(new TargetNar(targetIP, targetPort, taskThreshold, mustContainTerm, sendInput));
     }
     public void addRedirectionTo(TargetNar target) throws SocketException, UnknownHostException {
         targets.add(target);
@@ -235,20 +246,20 @@ public class NarNode extends Nar implements EventObserver  {
     public static void main(String[] args) throws SocketException, UnknownHostException, IOException, 
             InterruptedException, InstantiationException, InvocationTargetException, ParserConfigurationException, 
             NoSuchMethodException, SAXException, ClassNotFoundException, IllegalAccessException, ParseException {
-        if((args.length-2) % 4 != 0) { //args length check, it has to be 2+4*k, with k in N0
-            System.out.println("expected arguments: minCyclePeriodMS listenPort targetIP1 targetPort1 prioThres1 mustContainTerm1 ... targetIPN targetPortN prioThresN mustContainTermN");
+        if((args.length-3) % 5 != 0) { //args length check, it has to be 3+5*k, with k in N0
+            System.out.println("expected arguments: file cycles listenPort targetIP1 targetPort1 prioThres1 mustContainTerm1 sendInput1 ... targetIPN targetPortN prioThresN mustContainTermN sendInputN");
             System.exit(0);
         }
-        int nar1port = Integer.parseInt(args[1]);
-        NarNode nar1 = new NarNode(nar1port);
+        int nar1port = Integer.parseInt(args[2]);
+        NarNode nar1 = new NarNode(new Nar(),nar1port);
         List<TargetNar> redirections = new ArrayList<TargetNar>();
-        for(int i=2; i<args.length; i+=4) {
+        for(int i=3; i<args.length; i+=5) {
             Term T = args[i+3].equals("null") ? null : new Term(args[i+3]);
-            redirections.add(new TargetNar(args[i], Integer.parseInt(args[i+1]), Float.parseFloat(args[i+2]), T));
+            redirections.add(new TargetNar(args[i], Integer.parseInt(args[i+1]), Float.parseFloat(args[i+2]), T, Boolean.parseBoolean(args[i+4])));
         }
         for(TargetNar target : redirections) {
             nar1.addRedirectionTo(target);
         }
-        nar1.start(Integer.parseInt(args[0]));
+        new Shell(nar1.nar).run(new String[]{args[0], args[1]});
     }
 }

@@ -22,7 +22,6 @@ import java.util.Properties;
 
 /**
  *
- * @author me
  */
 public class HTTPServeFiles extends HTTPServer {
 
@@ -45,6 +44,12 @@ public class HTTPServeFiles extends HTTPServer {
     /**
      * Serves file from homeDir and its' subdirectories (only). Uses only URI,
      * ignores all headers and HTTP parameters.
+     *
+     * @param uri unified resource identifier of the served file
+     * @param header
+     * @param homeDir
+     * @param allowDirectoryListing
+     * @return
      */
     public Response serveFile(String uri, Properties header, File homeDir,
             boolean allowDirectoryListing) {

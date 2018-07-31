@@ -118,12 +118,12 @@ abstract public class HTTPServer {
      *
      * (By default, this delegates to serveFile() and allows directory listing.)
      *
-     * @parm uri Percent-decoded URI without parameters, for example
+     * @param uri Percent-decoded URI without parameters, for example
      * "/index.cgi"
-     * @parm method "GET", "POST" etc.
-     * @parm parms Parsed, percent decoded parameters from URI and, in case of
+     * @param method "GET", "POST" etc.
+     * @param parms Parsed, percent decoded parameters from URI and, in case of
      * POST, data.
-     * @parm header Header entries, percent decoded
+     * @param header Header entries, percent decoded
      * @return HTTP response, see class Response for details
      */
     abstract public Response serve(String uri, String method, Properties header, Properties parms);
@@ -151,14 +151,17 @@ abstract public class HTTPServer {
     public class Response {
 
         /**
-         * Default constructor: response = HTTP_OK, data = mime = 'null'
+         * constructor to set it to default values
          */
         public Response() {
             this.status = HTTP_OK;
         }
 
         /**
-         * Basic constructor.
+         *
+         * @param status
+         * @param mimeType Multipurpose Internet Mail Extensions type
+         * @param data
          */
         public Response(String status, String mimeType, InputStream data) {
             this.status = status;
@@ -168,6 +171,10 @@ abstract public class HTTPServer {
 
         /**
          * Convenience method that makes an InputStream out of given text.
+         *
+         * @param status
+         * @param mimeType Multipurpose Internet Mail Extensions type
+         * @param txt
          */
         public Response(String status, String mimeType, String txt) {
             this.status = status;
@@ -176,7 +183,10 @@ abstract public class HTTPServer {
         }
 
         /**
-         * Adds given line to the header.
+         * Adds given line to the header
+         *
+         * @param name name of the header
+         * @param value value of the header
          */
         public void addHeader(String name, String value) {
             header.put(name, value);
@@ -188,7 +198,7 @@ abstract public class HTTPServer {
         public String status;
 
         /**
-         * MIME type of content, e.g. "text/html"
+         * Multipurpose Internet Mail Extensions type of content, e.g. "text/html"
          */
         public String mimeType;
 
@@ -221,9 +231,10 @@ abstract public class HTTPServer {
     // Socket & server code
     // 
     /**
-     * Starts a HTTP server to given port.
-     * <p>
-     * Throws an IOException if the socket is already in use
+     * Starts a HTTP server
+     *
+     * @param port the port of the HTTP server
+     * @throws IOException if the socket is already in use
      */
     public HTTPServer(int port) throws IOException {
         myTcpPort = port;        
@@ -244,7 +255,7 @@ abstract public class HTTPServer {
         t.start();
     }
 
-    /**
+    /*
      * Starts as a standalone file server and waits for Enter.
      */
     /*public static void main(String[] args) {
@@ -392,8 +403,13 @@ abstract public class HTTPServer {
         }
 
         /**
-         * Decodes the percent encoding scheme. <br/> For example:
-         * "an+example%20string" -> "an example string"
+         * Decodes the percent encoding scheme.
+         *
+         * <br>
+         * For example: "an+example%20string" -&gt; "an example string"
+         *
+         * @param str string which has to be decoded
+         * @return decoded string
          */
         private String decodePercent(String str) throws InterruptedException {
             try {
@@ -422,27 +438,34 @@ abstract public class HTTPServer {
 
         /**
          * Decodes parameters in percent-encoded URI-format ( e.g.
-         * "name=Jack%20Daniels&pass=Single%20Malt" ) and adds them to given
+         * "name=Jack%20Daniels&amp;pass=Single%20Malt" ) and adds them to given
          * Properties.
+         *
+         * @param parameters
+         * @param properties
          */
-        private void decodeParms(String parms, Properties p) throws InterruptedException {
-            if (parms == null) {
+        private void decodeParms(String parameters, Properties properties) throws InterruptedException {
+            if (parameters == null) {
                 return;
             }
 
-            StringTokenizer st = new StringTokenizer(parms, "&");
+            StringTokenizer st = new StringTokenizer(parameters, "&");
             while (st.hasMoreTokens()) {
                 String e = st.nextToken();
                 int sep = e.indexOf('=');
                 if (sep >= 0) {
-                    p.put(decodePercent(e.substring(0, sep)).trim(), decodePercent(e.substring(sep + 1)));
+                    properties.put(decodePercent(e.substring(0, sep)).trim(), decodePercent(e.substring(sep + 1)));
                 }
             }
         }
 
         /**
-         * Returns an error message as a HTTP response and throws
-         * InterruptedException to stop furhter request processing.
+         * Returns an error message as a HTTP response
+         *
+         * @param status status to be sent
+         * @param msg error message to be sent
+         *
+         * @throws InterruptedException to stop further request processing.
          */
         private void sendError(String status, String msg) throws InterruptedException {
             sendResponse(status, MIME_PLAINTEXT, null, new ByteArrayInputStream(msg.getBytes()));
@@ -451,7 +474,12 @@ abstract public class HTTPServer {
 
 
         /**
-         * Sends given response to the socket.
+         * Sends given response
+         *
+         * @param status status code
+         * @param mime Multipurpose Internet Mail Extensions type
+         * @param header content of the HTTP header
+         * @param data payload
          */
         private void sendResponse(String status, String mime, Properties header, InputStream data) {
             try {
@@ -511,7 +539,12 @@ abstract public class HTTPServer {
     }
 
     /**
-     * URL-encodes everything between "/"-characters. Encodes spaces as '%20'
+     * Encodes the Unified resource identifier
+     *
+     * @param uri Unified resource identifier to be encoded
+     * @return encoded Unified resource identifier
+     */
+    /* URL-encodes everything between "/"-characters. Encodes spaces as '%20'
      * instead of '+'.
      */
     public static String encodeUri(String uri) throws UnsupportedEncodingException {
@@ -542,7 +575,7 @@ abstract public class HTTPServer {
 
 
     /**
-     * Hashtable mapping (String)FILENAME_EXTENSION -> (String)MIME_TYPE
+     * Hashtable mapping (String)FILENAME_EXTENSION -&gt; (String)MIME_TYPE
      */
     public static final Hashtable theMimeTypes = new Hashtable();
 

@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.opennars.interfaces.pub.Reasoner;
 import org.opennars.main.Nar;
+import org.opennars.main.Shell;
 import org.xml.sax.SAXException;
 
 public class NARServer  {
@@ -39,10 +41,11 @@ public class NARServer  {
     
     private static int cycleIntervalMS = 50;
     
-    class NARSWebSocketServer extends WebSocketServer  {
+    public class NARSWebSocketServer extends WebSocketServer  {
 
-        public NARSWebSocketServer(InetSocketAddress addr) {
+        public NARSWebSocketServer(Nar nar, InetSocketAddress addr) {
             super(addr);
+            this.nar = nar;
         }
 
         @Override
@@ -122,48 +125,41 @@ public class NARServer  {
         
     }
     
-    final NARSWebSocketServer websockets;
+    NARSWebSocketServer websockets = null;
     private final Map<WebSocket, NARConnection> socketSession = new HashMap();
 
-    public NARServer(int httpPort, int webSocketsPort) throws IOException {
-        websockets = new NARSWebSocketServer(new InetSocketAddress(webSocketsPort));
-        websockets.start();
-        
-        new HTTPServeFiles(httpPort, new File("nars_web/client"));
-        
+    public NARServer(Nar nar, int httpPort, int webSocketsPort) throws IOException {
+        try {
+            websockets = new NARSWebSocketServer(nar, new InetSocketAddress(webSocketsPort));
+            websockets.start();
+            new HTTPServeFiles(httpPort, new File(NARServer.class.getClassLoader().getResource("./client").toURI()));
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(NARServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-
 
 
     public static void main(String[] args) throws Exception {
                 
+        if(args.length == 0) {
+            args = new String[] { "null", "null", "null", "null", "80" };
+        }
         int httpPort;
         int wsPort = DEFAULT_WEBSOCKET_PORT;
         
-        String nlpHost = null;
-        int nlpPort = 0;
-        
         if (args.length < 1) {
-            System.out.println("Usage: NARServer <httpPort> [nlpHost nlpPort] [cycleIntervalMS]");
-            
+            System.out.println("Usage: NARServer narOrConfigFileOrNull idOrNull nalFileOrNull cyclesToRunOrNull <httpPort> [cycleIntervalMS]");
             return;
         }
         else {
-            httpPort = Integer.parseInt(args[0]);
-            
-            if (args.length >= 3) {
-                nlpHost = args[1];
-                if (!"null".equals(args[2])) {
-                    nlpPort = Integer.parseInt(args[2]);
-                    //nlp = new NLPInputParser(nlpHost, nlpPort);
-                }
-            }
-            if (args.length >= 4) {
-                cycleIntervalMS = Integer.parseInt(args[3]);
+            httpPort = Integer.parseInt(args[4]);
+            if (args.length > 5) {
+                cycleIntervalMS = Integer.parseInt(args[5]);
             }
         }
                 
-        NARServer s = new NARServer(httpPort, wsPort);
+        Nar nar = Shell.createNar(args);
+        NARServer s = new NARServer(nar, httpPort, wsPort);
         
         System.out.println("NARS Web Server ready. port: " + httpPort + ", websockets port: " + wsPort);
         System.out.println("  Cycle interval (ms): " + cycleIntervalMS);
